@@ -29,14 +29,11 @@
                (- b/block-size 2)
                (- b/block-size 2))))
 
+(defn color-cells! [$canvas cells color]
+  (doseq [cell cells]
+    (color-cell! $canvas cell color)))
+
 (defn make-canvas []
   (doto (canvas-node)
     (render-grid!)
     (render-cells!)))
-
-(comment
-  (let [$canvas $test-canvas
-        color "red"]
-
-    (doseq [[x y] [[7 4] [7 5] [7 6]]]
-      (color-cell! $canvas [x y] color))))
