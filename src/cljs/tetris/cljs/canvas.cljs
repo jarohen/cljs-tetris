@@ -27,13 +27,14 @@
 
 (comment
   (let [$canvas $test-canvas
-        [x y] [4 4]
         color "red"]
-    
-    (let [context (.getContext $canvas "2d")]
-      (set! (.-fillStyle context) color)
-      (.fillRect context
-                 (* x b/block-size)
-                 (* y b/block-size)
-                 b/block-size
-                 b/block-size))))
+
+    (doseq [[x y] [[4 4] [4 5] [4 6]]]
+      
+      (let [context (.getContext $canvas "2d")]
+        (set! (.-fillStyle context) color)
+        (.fillRect context
+                   (* x b/block-size)
+                   (* y b/block-size)
+                   b/block-size
+                   b/block-size)))))
