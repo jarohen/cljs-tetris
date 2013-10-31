@@ -14,3 +14,15 @@
 (defn make-canvas []
   (doto (canvas-node)
     (render-grid!)))
+
+(comment
+  (let [$canvas $test-canvas]
+    (let [context (.getContext $canvas "2d")
+          {:keys [blocks-tall blocks-wide]} b/canvas-size]
+      (doseq [i (range blocks-wide)
+              j (range blocks-tall)]
+        (.strokeRect context
+                     (* i b/block-size)
+                     (* j b/block-size)
+                     b/block-size
+                     b/block-size)))))
