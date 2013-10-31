@@ -17,6 +17,10 @@
                    (* i b/block-size)
                    (* j b/block-size) b/block-size b/block-size))))
 
+(defn render-cells! [$canvas]
+  (def $test-canvas $canvas))
+
 (defn make-canvas []
   (doto (canvas-node)
-    (render-grid!)))
+    (render-grid!)
+    (render-cells!)))
