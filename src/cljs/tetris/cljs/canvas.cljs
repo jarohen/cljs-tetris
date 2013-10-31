@@ -20,6 +20,15 @@
 (defn render-cells! [$canvas]
   (def $test-canvas $canvas))
 
+(defn color-cell! [$canvas [x y] color]
+  (let [context (.getContext $canvas "2d")]
+    (set! (.-fillStyle context) color)
+    (.fillRect context
+               (inc (* x b/block-size))
+               (inc (* y b/block-size))
+               (- b/block-size 2)
+               (- b/block-size 2))))
+
 (defn make-canvas []
   (doto (canvas-node)
     (render-grid!)
@@ -30,11 +39,4 @@
         color "red"]
 
     (doseq [[x y] [[7 4] [7 5] [7 6]]]
-      
-      (let [context (.getContext $canvas "2d")]
-        (set! (.-fillStyle context) color)
-        (.fillRect context
-                   (inc (* x b/block-size))
-                   (inc (* y b/block-size))
-                   (- b/block-size 2)
-                   (- b/block-size 2))))))
+      (color-cell! $canvas [x y] color))))
