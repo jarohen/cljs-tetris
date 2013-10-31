@@ -24,3 +24,16 @@
   (doto (canvas-node)
     (render-grid!)
     (render-cells!)))
+
+(comment
+  (let [$canvas $test-canvas
+        [x y] [4 4]
+        color "red"]
+    
+    (let [context (.getContext $canvas "2d")]
+      (set! (.-fillStyle context) color)
+      (.fillRect context
+                 (* x b/block-size)
+                 (* y b/block-size)
+                 b/block-size
+                 b/block-size))))
