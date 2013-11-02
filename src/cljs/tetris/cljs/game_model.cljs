@@ -26,11 +26,33 @@
 (defn new-game []
   {:current-piece (random-piece)})
 
+;; ---------- TICK ----------
+
+(defn ticker-ch [ms]
+  (let [ch (a/chan)]
+    (go-loop []
+      (a/<! (a/timeout ms))
+      (a/>! ch :tick)
+      (recur))
+    ch))
+
+(defn apply-tick [game]
+  (js/console.log "Tick!")
+  (update-in game [:current-piece :location 1] inc))
+
 (defn repeatedly-tick! [!game]
-  )
+  (let [tick-ch (ticker-ch 500)]
+    (go-loop []
+      (<! tick-ch)
+      (swap! !game apply-tick)
+      (recur))))
+
+;; ---------- COMMANDS ----------
 
 (defn apply-commands! [!game command-ch]
   )
+
+;; ---------- WIRING UP ----------
 
 (defn wire-up-model! [!game command-ch]
   (def !test-game !game)
