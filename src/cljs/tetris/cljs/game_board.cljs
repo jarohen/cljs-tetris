@@ -7,4 +7,6 @@
   (color-cells! [_ cells color])
   (color-rows! [_ rows color])
   
-  (command-ch [_]))
+  (command-ch [_])
+
+  (flash-cells! [_ cells]))

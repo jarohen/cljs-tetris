@@ -25,9 +25,7 @@
      :location (rand-nth (valid-starting-locations {:shape shape :rotation rotation}))}))
 
 (defn new-game []
-  {:current-piece (random-piece)
-   :placed-cells (for [x (range 9)]
-                   {:cell [x 14] :color "black"})})
+  {:current-piece (random-piece)})
 
 (defn cleared-rows [placed-cells]
   (set (for [[row cells] (group-by second (map :cell placed-cells))
@@ -42,12 +40,17 @@
                     (let [cleared-rows-below-this (count (filter #(> % y) cleared-rows))]
                       (update-in placed-cell [:cell 1] #(+ % cleared-rows-below-this))))))
 
+(defn game-over? [{:keys [placed-cells]}]
+  (not (empty? (filter (comp zero? second :cell) placed-cells))))
+
 (defn add-next-piece [game]
-  (-> game
-      (assoc :current-piece (random-piece)
-             :piece-placed? false)
-      remove-cleared-rows
-      (dissoc :cleared-rows)))
+  (if (game-over? game)
+    (assoc game :game-over? true)
+    (-> game
+        (assoc :current-piece (random-piece)
+               :piece-placed? false)
+        remove-cleared-rows
+        (dissoc :cleared-rows))))
 
 ;; ---------- COLLISION DETECTION ----------
 
@@ -90,9 +93,10 @@
       (recur))
     ch))
 
-(defn apply-tick [{:keys [piece-placed?] :as game}]
+(defn apply-tick [{:keys [piece-placed? game-over?] :as game}]
   (let [new-game (update-in game [:current-piece :location 1] inc)]
     (cond
+     game-over? game
      piece-placed? (add-next-piece game)
      (piece-collision? new-game) (place-piece game)
      :otherwise new-game)))
@@ -133,7 +137,7 @@
   (let [cells (t/piece->cells current-piece)
         {:keys [blocks-wide]} b/canvas-size]
     (and (every? (fn [[x y]]
-                   (and (< -1 x blocks-wide)))
+                   (< -1 x blocks-wide))
                  cells)
          (not (piece-collision? new-game)))))
 
@@ -145,9 +149,9 @@
 
 (defn apply-command [{:keys [piece-placed?] :as game} command]
   (cond
+   (= :new-game command) (new-game)
    piece-placed? game
-   (movement-command? command) (apply-movement game command)
-   (= :new-game command) (new-game)))
+   (movement-command? command) (apply-movement game command)))
 
 (defn apply-commands! [!game command-ch]
   (go-loop []

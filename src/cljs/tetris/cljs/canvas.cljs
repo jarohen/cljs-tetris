@@ -4,7 +4,8 @@
             [cljs.core.async :as a]
             [dommy.core :as d]
             [goog.events.KeyCodes :as kc])
-  (:require-macros [dommy.macros :refer [node]]))
+  (:require-macros [dommy.macros :refer [node]]
+                   [cljs.core.async.macros :refer [go-loop]]))
 
 (defn canvas-node []
   (node
@@ -58,9 +59,25 @@
                    (.preventDefault e))))
     ch))
 
+(defn bind-cell-flashing! [$canvas cells-ch]
+  (go-loop [cells []
+            colour "red"]
+    (let [[v c] (a/alts! [(a/timeout 600) cells-ch])]
+      ;; not v if timeout, v if new cells list
+      (if v
+        (do
+          (color-cells! $canvas cells "white")
+          (recur v colour))
+        (do
+          (color-cells! $canvas cells colour)
+          (recur cells ({"white" "red" "red" "white"} colour)))))))
+
 (defn make-canvas []
-  (let [$canvas (doto (canvas-node)
-                  (render-grid!))]
+  (let [flashing-cells-ch (a/chan)
+        $canvas (doto (canvas-node)
+                  (render-grid!)
+                  (bind-cell-flashing! flashing-cells-ch))]
+    
     (reify gb/GameBoard
       (board->node [_] $canvas)
       (color-cell! [_ cells color]
@@ -71,4 +88,7 @@
         (color-rows! $canvas rows color))
       
       (command-ch [_]
-        (command-ch $canvas)))))
+        (command-ch $canvas))
+
+      (flash-cells! [_ cells]
+        (a/put! flashing-cells-ch cells)))))

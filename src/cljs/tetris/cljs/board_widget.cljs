@@ -32,10 +32,17 @@
 
 (defn watch-game! [game-board !game]
   (add-watch !game ::renderer
-            (fn [_ _ old-game new-game]
-              (render-current-piece! game-board old-game new-game)
-              (render-placed-cells! game-board old-game new-game)
-              (render-cleared-rows! game-board new-game))))
+             (fn [_ _ old-game new-game]
+               (when (and (:game-over? new-game) (not (:game-over? old-game)))
+                 (gb/flash-cells! game-board (map :cell (:placed-cells new-game))))
+
+               (when (and (:game-over? old-game) (not (:game-over? new-game)))
+                 (gb/flash-cells! game-board []))
+               
+               (when-not (:game-over? new-game)
+                 (render-current-piece! game-board old-game new-game)
+                 (render-placed-cells! game-board old-game new-game)
+                 (render-cleared-rows! game-board new-game)))))
 
 (defn listen-for-keypresses! [game-board command-ch]
   (a/pipe (gb/command-ch game-board) command-ch))
