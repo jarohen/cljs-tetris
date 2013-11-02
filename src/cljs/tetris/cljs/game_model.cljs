@@ -49,8 +49,51 @@
 
 ;; ---------- COMMANDS ----------
 
+(def movement-command?
+  #{:piece-left :piece-right :piece-down
+    :rotate-piece-clockwise :rotate-piece-anti-clockwise})
+
+(defmulti calculate-new-position #(identity %2))
+
+(defmethod calculate-new-position :piece-left [game _]
+  (update-in game [:current-piece :location 0] dec))
+
+(defmethod calculate-new-position :piece-right [game _]
+  (update-in game [:current-piece :location 0] inc))
+
+(defmethod calculate-new-position :rotate-piece-anti-clockwise [game _]
+  (update-in game [:current-piece :rotation] inc))
+
+(defmethod calculate-new-position :rotate-piece-clockwise [game _]
+  (update-in game [:current-piece :rotation] dec))
+
+(defmethod calculate-new-position :piece-down [game _]
+  ;; TODO 
+  game)
+
+(defn valid-game? [{:keys [current-piece] :as new-game}]
+  (let [cells (t/piece->cells current-piece)
+        {:keys [blocks-wide]} b/canvas-size]
+    (every? (fn [[x y]]
+              (and (< -1 x blocks-wide)))
+            cells)))
+
+(defn apply-movement [game command]
+  (let [new-game (calculate-new-position game command)]
+    (if (valid-game? new-game)
+      new-game
+      game)))
+
+(defn apply-command [game command]
+  (cond
+   (movement-command? command) (apply-movement game command)
+   (= :new-game command) (new-game)))
+
 (defn apply-commands! [!game command-ch]
-  )
+  (go-loop []
+    (let [command (<! command-ch)]
+      (swap! !game apply-command command))
+    (recur)))
 
 ;; ---------- WIRING UP ----------
 
