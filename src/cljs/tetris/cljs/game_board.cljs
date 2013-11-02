@@ -3,5 +3,6 @@
 (defprotocol GameBoard
   (board->node [_])
 
+  (color-cell! [_ cell color])
   (color-cells! [_ cells color])
   (command-ch [_]))

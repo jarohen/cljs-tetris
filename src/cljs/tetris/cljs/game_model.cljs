@@ -1,7 +1,8 @@
 (ns tetris.cljs.game-model
   (:require [tetris.cljs.board :as b]
             [tetris.cljs.tetraminos :as t]
-            [cljs.core.async :as a])
+            [cljs.core.async :as a]
+            [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn valid-starting-locations [{:keys [shape rotation] :as piece}]
@@ -26,6 +27,41 @@
 (defn new-game []
   {:current-piece (random-piece)})
 
+(defn add-next-piece [game]
+  (assoc game
+    :current-piece (random-piece)
+    :piece-placed? false))
+
+;; ---------- COLLISION DETECTION ----------
+
+(defn collision-cells [{:keys [placed-cells]}]
+  ;; the set of cells that, if the piece occupies one of these, will
+  ;; trigger a collision
+  (doto (let [{:keys [blocks-tall blocks-wide]} b/canvas-size]
+          (set
+           (concat
+            ;; one cell for every column, at the bottom
+            (for [x (range blocks-wide)]
+              [x blocks-tall])
+
+            ;; all the cells that have already been placed
+            (map :cell placed-cells))))
+    (pr-str js/console.log)))
+
+(defn piece-collision? [{:keys [current-piece] :as game}]
+  (boolean (seq (set/intersection (collision-cells game)
+                                  (set (t/piece->cells current-piece))))))
+
+(defn place-piece [{:keys [current-piece placed-cells] :as game}]
+  (let [new-placed-cells (concat placed-cells
+                                (for [cell (t/piece->cells current-piece)]
+                                  {:cell cell
+                                   :color (:color current-piece)}))]
+    (-> game
+        (assoc :piece-placed? true)
+        (assoc :placed-cells new-placed-cells)
+        (dissoc :current-piece))))
+
 ;; ---------- TICK ----------
 
 (defn ticker-ch [ms]
@@ -36,9 +72,12 @@
       (recur))
     ch))
 
-(defn apply-tick [game]
-  (js/console.log "Tick!")
-  (update-in game [:current-piece :location 1] inc))
+(defn apply-tick [{:keys [piece-placed?] :as game}]
+  (let [new-game (update-in game [:current-piece :location 1] inc)]
+    (cond
+     piece-placed? (add-next-piece game)
+     (piece-collision? new-game) (place-piece game)
+     :otherwise new-game)))
 
 (defn repeatedly-tick! [!game]
   (let [tick-ch (ticker-ch 500)]
@@ -74,9 +113,10 @@
 (defn valid-game? [{:keys [current-piece] :as new-game}]
   (let [cells (t/piece->cells current-piece)
         {:keys [blocks-wide]} b/canvas-size]
-    (every? (fn [[x y]]
-              (and (< -1 x blocks-wide)))
-            cells)))
+    (and (every? (fn [[x y]]
+                   (and (< -1 x blocks-wide)))
+                 cells)
+         (not (piece-collision? new-game)))))
 
 (defn apply-movement [game command]
   (let [new-game (calculate-new-position game command)]
@@ -84,8 +124,9 @@
       new-game
       game)))
 
-(defn apply-command [game command]
+(defn apply-command [{:keys [piece-placed?] :as game} command]
   (cond
+   piece-placed? game
    (movement-command? command) (apply-movement game command)
    (= :new-game command) (new-game)))
 

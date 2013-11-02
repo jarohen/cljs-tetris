@@ -57,6 +57,8 @@
                   (render-grid!))]
     (reify gb/GameBoard
       (board->node [_] $canvas)
+      (color-cell! [_ cells color]
+        (color-cell! $canvas cells color))
       (color-cells! [_ cells color]
         (color-cells! $canvas cells color))
       (command-ch [_]

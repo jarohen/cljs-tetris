@@ -17,10 +17,19 @@
     (when new-piece
       (render-tetramino! game-board new-piece))))
 
+(defn render-placed-cells! [game-board {old-cells :placed-cells} {new-cells :placed-cells}]
+  (when (not= old-cells new-cells)
+    (when old-cells
+      (gb/color-cells! game-board (map :cell old-cells) "white"))
+    (when new-cells
+      (doseq [{:keys [cell color]} new-cells]
+        (gb/color-cell! game-board cell color)))))
+
 (defn watch-game! [game-board !game]
   (add-watch !game ::renderer
             (fn [_ _ old-game new-game]
-              (render-current-piece! game-board old-game new-game))))
+              (render-current-piece! game-board old-game new-game)
+              (render-placed-cells! game-board old-game new-game))))
 
 (defn listen-for-keypresses! [game-board command-ch]
   (a/pipe (gb/command-ch game-board) command-ch))
