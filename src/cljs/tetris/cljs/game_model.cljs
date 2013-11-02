@@ -107,8 +107,9 @@
   (update-in game [:current-piece :rotation] dec))
 
 (defmethod calculate-new-position :piece-down [game _]
-  ;; TODO 
-  game)
+  (->> (iterate #(update-in % [:current-piece :location 1] inc) game)
+       (take-while (comp false? piece-collision?))
+       last))
 
 (defn valid-game? [{:keys [current-piece] :as new-game}]
   (let [cells (t/piece->cells current-piece)
