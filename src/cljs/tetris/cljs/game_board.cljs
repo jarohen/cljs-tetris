@@ -5,4 +5,6 @@
 
   (color-cell! [_ cell color])
   (color-cells! [_ cells color])
+  (color-rows! [_ rows color])
+  
   (command-ch [_]))

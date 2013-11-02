@@ -25,12 +25,29 @@
      :location (rand-nth (valid-starting-locations {:shape shape :rotation rotation}))}))
 
 (defn new-game []
-  {:current-piece (random-piece)})
+  {:current-piece (random-piece)
+   :placed-cells (for [x (range 9)]
+                   {:cell [x 14] :color "black"})})
+
+(defn cleared-rows [placed-cells]
+  (set (for [[row cells] (group-by second (map :cell placed-cells))
+             :when (= (:blocks-wide b/canvas-size) (count cells))]
+         row)))
+
+(defn remove-cleared-rows [{:keys [placed-cells cleared-rows] :as game}]
+  (assoc game
+    :placed-cells (for [{:keys [cell] :as placed-cell} placed-cells
+                        :let [[x y] cell]
+                        :when (not (cleared-rows y))]
+                    (let [cleared-rows-below-this (count (filter #(> % y) cleared-rows))]
+                      (update-in placed-cell [:cell 1] #(+ % cleared-rows-below-this))))))
 
 (defn add-next-piece [game]
-  (assoc game
-    :current-piece (random-piece)
-    :piece-placed? false))
+  (-> game
+      (assoc :current-piece (random-piece)
+             :piece-placed? false)
+      remove-cleared-rows
+      (dissoc :cleared-rows)))
 
 ;; ---------- COLLISION DETECTION ----------
 
@@ -60,6 +77,7 @@
     (-> game
         (assoc :piece-placed? true)
         (assoc :placed-cells new-placed-cells)
+        (assoc :cleared-rows (cleared-rows new-placed-cells))
         (dissoc :current-piece))))
 
 ;; ---------- TICK ----------

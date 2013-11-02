@@ -35,6 +35,12 @@
   (doseq [cell cells]
     (color-cell! $canvas cell color)))
 
+(defn color-rows! [$canvas rows color]
+  (let [cells (for [y rows
+                    x (range (:blocks-wide b/canvas-size))]
+                [x y])]
+    (color-cells! $canvas cells color)))
+
 (def keycode->command
   {kc/SPACE :piece-down
    kc/LEFT :piece-left
@@ -61,5 +67,8 @@
         (color-cell! $canvas cells color))
       (color-cells! [_ cells color]
         (color-cells! $canvas cells color))
+      (color-rows! [_ rows color]
+        (color-rows! $canvas rows color))
+      
       (command-ch [_]
         (command-ch $canvas)))))
