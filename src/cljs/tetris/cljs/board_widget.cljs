@@ -3,8 +3,7 @@
             [tetris.cljs.game-board :as gb]
             [tetris.cljs.canvas :refer [make-canvas]]
             [tetris.cljs.tetraminos :as t]
-
-            [tetris.cljs.board :as b])
+            [cljs.core.async :as a])
   (:require-macros [dommy.macros :refer [node sel1]]))
 
 (defn render-tetramino! [game-board {:keys [shape location rotation color] :as piece}]
@@ -22,17 +21,15 @@
             (fn [_ _ old-game new-game]
               (render-current-piece! game-board old-game new-game))))
 
-(defn make-board-widget [!game]
+(defn listen-for-keypresses! [game-board command-ch]
+  )
+
+(defn make-board-widget [!game command-ch]
   (def !test-game !game)
+  (def test-command-ch command-ch)
+  
+    (let [game-board (doto (make-canvas)
+                       (watch-game! !game)
+                       (listen-for-keypresses! command-ch))]
+      (gb/board->node game-board)))
 
-  (let [game-board (doto (make-canvas)
-                     (watch-game! !game))]
-    (gb/board->node game-board)))
-
-(comment
-  (reset! !test-game
-          (let [{:keys [blocks-wide blocks-tall]} b/canvas-size]
-            {:current-piece {:shape (rand-nth (vec t/shapes))
-                             :color (rand-nth (vec t/colors))
-                             :rotation (rand-int 4)
-                             :location (map rand-int [blocks-wide blocks-tall])}})))
