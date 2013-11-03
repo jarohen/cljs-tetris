@@ -43,14 +43,15 @@
 (defn game-over? [{:keys [placed-cells]}]
   (not (empty? (filter (comp zero? second :cell) placed-cells))))
 
-(defn add-next-piece [game]
+(defn add-next-piece [{:keys [cleared-rows] :as game}]
   (if (game-over? game)
     (assoc game :game-over? true)
     (-> game
         (assoc :current-piece (random-piece)
                :piece-placed? false)
         remove-cleared-rows
-        (dissoc :cleared-rows))))
+        (dissoc :cleared-rows)
+        (update-in [:cleared-row-count] (fnil + 0) (count cleared-rows)))))
 
 ;; ---------- COLLISION DETECTION ----------
 
