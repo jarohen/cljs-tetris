@@ -30,8 +30,8 @@
         (d/value $name))
       (set-enabled! [_ enabled?]
         (if enabled?
-          (d/set-attr! $button :disabled true)
-          (d/remove-attr! $button :disabled))))))
+          (d/remove-attr! $button :disabled)
+          (d/set-attr! $button :disabled true))))))
 
 (def sample-top-scores
   [{:player "Bob" :score 14}
@@ -75,7 +75,8 @@
            (fn []
              (let [name (player-name form)]
                (when-not (s/blank? name)
-                 (js/console.log name "joining."))))))
+                 (set-enabled! form false)
+                 (a/put! commands-ch {:name name}))))))
 
 (defn make-multiplayer-widget [!top-scores !player-name commands-ch]
   (def !test-top-scores !top-scores)
