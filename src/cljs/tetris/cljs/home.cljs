@@ -2,6 +2,7 @@
   (:require [dommy.core :as d]
             [tetris.cljs.board-widget :refer [make-board-widget]]
             [tetris.cljs.cleared-rows-widget :refer [make-cleared-rows-widget]]
+            [tetris.cljs.multiplayer :refer [make-multiplayer-section]]
             [tetris.cljs.game-model :refer [wire-up-model!]]
             [cljs.core.async :as a])
   (:require-macros [dommy.macros :refer [node sel1]]
@@ -34,5 +35,7 @@
                                                 (make-board-widget !game command-ch)
                                                 (make-cleared-rows-widget !game)]
                                                [:div.col-md-4
-                                                (render-keys)]]))
+                                                (render-keys)
+                                                (make-multiplayer-section !game)]]))
+
                    (wire-up-model! !game command-ch))))))
