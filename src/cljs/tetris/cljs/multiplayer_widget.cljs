@@ -33,14 +33,9 @@
           (d/remove-attr! $button :disabled)
           (d/set-attr! $button :disabled true))))))
 
-(def sample-top-scores
-  [{:player "Bob" :score 14}
-   {:player "Steve" :score 8}
-   {:player "Chris" :score 5}
-   {:player "Tim" :score 2}])
-
 (defprotocol TopScoresTable
-  (table->node [_]))
+  (table->node [_])
+  (set-scores! [_ scores]))
 
 (defn ts-table-node [top-scores]
   (node
@@ -55,10 +50,12 @@
           [:td player] [:td {:style {:text-align :right}} score]]))]]]))
 
 (defn make-top-scores-table []
-  (reify TopScoresTable
-    (table->node [_]
-      (node [:div {:style {:margin "1em"}}
-             (ts-table-node sample-top-scores)]))))
+  (let [$table (node [:div {:style {:margin "1em"}}])]
+    (reify TopScoresTable
+      (table->node [_]
+        $table)
+      (set-scores! [_ scores]
+        (d/replace-contents! $table (ts-table-node scores))))))
 
 (defn multiplayer-node [table form]
   (node
@@ -78,13 +75,25 @@
                  (set-enabled! form false)
                  (a/put! commands-ch {:name name}))))))
 
+(defn bind-top-scores! [table !top-scores]
+  (add-watch !top-scores ::renderer
+             (fn [_ _ _ scores]
+               (set-scores! table scores))))
+
 (defn make-multiplayer-widget [!top-scores !player-name commands-ch]
   (def !test-top-scores !top-scores)
   (def !test-player-name !player-name)
   (def test-commands-ch commands-ch)
 
-  (let [table (make-top-scores-table)
+  (let [table (doto (make-top-scores-table)
+                (bind-top-scores! !top-scores))
         form (doto (make-player-name-form)
                (bind-join! commands-ch))]
-    
+
     (multiplayer-node table form)))
+
+(comment
+  (reset! !test-top-scores [{:player "Bob" :score 14}
+                            {:player "Steve" :score 8}
+                            {:player "Chris" :score 5}
+                            {:player "Tim" :score 2}]))
