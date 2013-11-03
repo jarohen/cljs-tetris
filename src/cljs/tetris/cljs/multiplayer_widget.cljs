@@ -8,22 +8,24 @@
   (form->node [_])
   (on-join [_ f])
   (player-name [_])
-  (set-enabled! [_ enabled?]))
+  (set-enabled! [_ enabled?])
+  (set-visibility! [_ visible?]))
 
 (defn make-player-name-form []
   (let [$name (node [:input.form-control {:type "text"
                                           :placeholder "Your name"
                                           :style {:width "15em"}}])
         $button (node [:button.btn.btn-primary {:style {:margin-left "1em"}}
-                       "Join"])]
+                       "Join"])
+        $form (node
+               [:div
+                [:form.form-inline {:role "form" :onsubmit "return false;"}
+                 [:fieldset
+                  $name
+                  $button]]])]
     (reify PlayerNameForm
       (form->node [_]
-        (node
-         [:div
-          [:form.form-inline {:role "form" :onsubmit "return false;"}
-           [:fieldset
-            $name
-            $button]]]))
+        $form)
       (on-join [_ f]
         (d/listen! $button :click f))
       (player-name [_]
@@ -31,7 +33,11 @@
       (set-enabled! [_ enabled?]
         (if enabled?
           (d/remove-attr! $button :disabled)
-          (d/set-attr! $button :disabled true))))))
+          (d/set-attr! $button :disabled true)))
+      (set-visibility! [_ visible?]
+        (if visible?
+          (d/show! $form)
+          (d/hide! $form))))))
 
 (defprotocol TopScoresTable
   (table->node [_])
@@ -80,6 +86,12 @@
              (fn [_ _ _ scores]
                (set-scores! table scores))))
 
+(defn bind-form-visibility! [form !player-name]
+  (set-visibility! form (nil? @!player-name))
+  (add-watch !player-name ::form-visibility
+             (fn [_ _ _ name]
+               (set-visibility! form (nil? name)))))
+
 (defn make-multiplayer-widget [!top-scores !player-name commands-ch]
   (def !test-top-scores !top-scores)
   (def !test-player-name !player-name)
@@ -88,7 +100,8 @@
   (let [table (doto (make-top-scores-table)
                 (bind-top-scores! !top-scores))
         form (doto (make-player-name-form)
-               (bind-join! commands-ch))]
+               (bind-join! commands-ch)
+               (bind-form-visibility! !player-name))]
 
     (multiplayer-node table form)))
 
@@ -96,4 +109,6 @@
   (reset! !test-top-scores [{:player "Bob" :score 14}
                             {:player "Steve" :score 8}
                             {:player "Chris" :score 5}
-                            {:player "Tim" :score 2}]))
+                            {:player "Tim" :score 2}])
+
+  (reset! !test-player-name "James"))
