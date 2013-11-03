@@ -70,6 +70,6 @@
   
     (let [game-board (doto (make-canvas)
                        (watch-game! !game)
-                       (listen-for-keypresses! command-ch))]
+                       (listen-for-keypresses! command-ch)
+                       (gb/focus!))]
       (gb/board->node game-board)))
-

@@ -10,4 +10,6 @@
   
   (command-ch [_])
 
-  (flash-cells! [_ cells]))
+  (flash-cells! [_ cells])
+
+  (focus! [_]))

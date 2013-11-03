@@ -5,7 +5,7 @@
             [dommy.core :as d]
             [goog.events.KeyCodes :as kc])
   (:require-macros [dommy.macros :refer [node]]
-                   [cljs.core.async.macros :refer [go-loop]]))
+                   [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn canvas-node []
   (node
@@ -101,4 +101,9 @@
         (command-ch $canvas))
 
       (flash-cells! [_ cells]
-        (a/put! flashing-cells-ch cells)))))
+        (a/put! flashing-cells-ch cells))
+
+      (focus! [_]
+        (go
+         (a/<! (a/timeout 200))
+         (.focus $canvas))))))
