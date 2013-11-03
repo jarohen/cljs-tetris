@@ -4,7 +4,8 @@
             [compojure.route :refer [resources]]
             [compojure.handler :refer [api]]
             [hiccup.page :refer [html5 include-css include-js]]
-            [frodo :refer [repl-connect-js]]))
+            [frodo :refer [repl-connect-js]]
+            [tetris.multiplayer :as multiplayer]))
 
 (defn page-frame []
   (html5
@@ -22,6 +23,7 @@
 
 (defroutes app-routes
   (GET "/" [] (response (page-frame)))
+  (GET "/scores" [] multiplayer/user-joined!)
   (resources "/js" {:root "js"}))
 
 (def app 
