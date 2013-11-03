@@ -93,10 +93,10 @@
       (recur))
     ch))
 
-(defn apply-tick [{:keys [piece-placed? game-over?] :as game}]
+(defn apply-tick [{:keys [piece-placed? game-over? paused?] :as game}]
   (let [new-game (update-in game [:current-piece :location 1] inc)]
     (cond
-     game-over? game
+     (or game-over? paused?) game
      piece-placed? (add-next-piece game)
      (piece-collision? new-game) (place-piece game)
      :otherwise new-game)))
@@ -147,10 +147,11 @@
       new-game
       game)))
 
-(defn apply-command [{:keys [piece-placed?] :as game} command]
+(defn apply-command [{:keys [paused? piece-placed?] :as game} command]
   (cond
    (= :new-game command) (new-game)
-   piece-placed? game
+   (= :toggle-pause command) (update-in game [:paused?] not)
+   (or paused? piece-placed?) game
    (movement-command? command) (apply-movement game command)))
 
 (defn apply-commands! [!game command-ch]
@@ -167,5 +168,6 @@
 
   (doto !game
     (reset! (new-game))
+    (swap! assoc :paused? true)
     (repeatedly-tick!)
     (apply-commands! command-ch)))

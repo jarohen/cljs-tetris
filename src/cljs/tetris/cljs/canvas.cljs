@@ -42,13 +42,21 @@
                 [x y])]
     (color-cells! $canvas cells color)))
 
+(defn color-all! [$canvas color]
+  (let [{:keys [blocks-tall blocks-wide]} b/canvas-size
+        cells (for [x (range blocks-wide)
+                    y (range blocks-tall)]
+                [x y])]
+    (color-cells! $canvas cells color)))
+
 (def keycode->command
   {kc/SPACE :piece-down
    kc/LEFT :piece-left
    kc/RIGHT :piece-right
    kc/UP :rotate-piece-clockwise
    kc/DOWN :rotate-piece-anti-clockwise
-   kc/N :new-game})
+   kc/N :new-game
+   kc/P :toggle-pause})
 
 (defn command-ch [$canvas]
   (let [ch (a/chan)]
@@ -86,6 +94,8 @@
         (color-cells! $canvas cells color))
       (color-rows! [_ rows color]
         (color-rows! $canvas rows color))
+      (color-all! [_ color]
+        (color-all! $canvas color))
       
       (command-ch [_]
         (command-ch $canvas))

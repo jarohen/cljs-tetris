@@ -30,6 +30,21 @@
   (when (seq cleared-rows)
     (gb/color-rows! game-board cleared-rows "#ccc")))
 
+(defn render-paused! [game-board {old-paused? :paused?} {new-paused? :paused?
+                                                      :keys [placed-cells current-piece]}]
+  (when (and (not old-paused?)
+             new-paused?)
+    (gb/color-all! game-board "#888"))
+
+  (when (and old-paused?
+             (not new-paused?))
+    (gb/color-all! game-board "white")
+    (doseq [{:keys [cell color]} placed-cells]
+      (gb/color-cell! game-board cell color))
+
+    (when current-piece
+      (render-tetramino! game-board current-piece))))
+
 (defn watch-game! [game-board !game]
   (add-watch !game ::renderer
              (fn [_ _ old-game new-game]
@@ -42,7 +57,9 @@
                (when-not (:game-over? new-game)
                  (render-current-piece! game-board old-game new-game)
                  (render-placed-cells! game-board old-game new-game)
-                 (render-cleared-rows! game-board new-game)))))
+                 (render-cleared-rows! game-board new-game))
+
+               (render-paused! game-board old-game new-game))))
 
 (defn listen-for-keypresses! [game-board command-ch]
   (a/pipe (gb/command-ch game-board) command-ch))
