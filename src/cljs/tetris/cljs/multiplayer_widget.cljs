@@ -1,21 +1,37 @@
 (ns tetris.cljs.multiplayer-widget
-  (:require [dommy.core :as d])
+  (:require [dommy.core :as d]
+            [clojure.string :as s]
+            [cljs.core.async :as a])
   (:require-macros [dommy.macros :refer [node sel1]]))
 
 (defprotocol PlayerNameForm
-  (form->node [_]))
+  (form->node [_])
+  (on-join [_ f])
+  (player-name [_])
+  (set-enabled! [_ enabled?]))
 
 (defn make-player-name-form []
-  (reify PlayerNameForm
-    (form->node [_]
-      (node
-       [:div
-        [:form.form-inline {:role "form" :onsubmit "return false;"}
-         [:fieldset
-          [:input.form-control {:type "text"
-                                :placeholder "Your name"
-                                :style {:width "15em"}}]
-          [:button.btn.btn-primary {:style {:margin-left "1em"}} "Join"]]]]))))
+  (let [$name (node [:input.form-control {:type "text"
+                                          :placeholder "Your name"
+                                          :style {:width "15em"}}])
+        $button (node [:button.btn.btn-primary {:style {:margin-left "1em"}}
+                       "Join"])]
+    (reify PlayerNameForm
+      (form->node [_]
+        (node
+         [:div
+          [:form.form-inline {:role "form" :onsubmit "return false;"}
+           [:fieldset
+            $name
+            $button]]]))
+      (on-join [_ f]
+        (d/listen! $button :click f))
+      (player-name [_]
+        (d/value $name))
+      (set-enabled! [_ enabled?]
+        (if enabled?
+          (d/set-attr! $button :disabled true)
+          (d/remove-attr! $button :disabled))))))
 
 (def sample-top-scores
   [{:player "Bob" :score 14}
@@ -54,11 +70,20 @@
     (form->node form)
     (table->node table)]))
 
+(defn bind-join! [form commands-ch]
+  (on-join form
+           (fn []
+             (let [name (player-name form)]
+               (when-not (s/blank? name)
+                 (js/console.log name "joining."))))))
+
 (defn make-multiplayer-widget [!top-scores !player-name commands-ch]
   (def !test-top-scores !top-scores)
   (def !test-player-name !player-name)
   (def test-commands-ch commands-ch)
 
   (let [table (make-top-scores-table)
-        form (make-player-name-form)]
+        form (doto (make-player-name-form)
+               (bind-join! commands-ch))]
+    
     (multiplayer-node table form)))
