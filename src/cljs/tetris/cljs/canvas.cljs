@@ -1,5 +1,6 @@
 (ns tetris.cljs.canvas
-  (:require [tetris.cljs.board :as b])
+  (:require [tetris.cljs.board :as b]
+            [tetris.cljs.game-board :as gb])
   (:require-macros [dommy.macros :refer [node]]))
 
 (defn canvas-node []
@@ -17,9 +18,6 @@
                    (* i b/block-size)
                    (* j b/block-size) b/block-size b/block-size))))
 
-(defn render-cells! [$canvas]
-  (def $test-canvas $canvas))
-
 (defn color-cell! [$canvas [x y] color]
   (let [context (.getContext $canvas "2d")]
     (set! (.-fillStyle context) color)
@@ -34,6 +32,9 @@
     (color-cell! $canvas cell color)))
 
 (defn make-canvas []
-  (doto (canvas-node)
-    (render-grid!)
-    (render-cells!)))
+  (let [$canvas (doto (canvas-node)
+                  (render-grid!))]
+    (reify gb/GameBoard
+      (board->node [_] $canvas)
+      (color-cells! [_ cells color]
+        (color-cells! $canvas cells color)))))
