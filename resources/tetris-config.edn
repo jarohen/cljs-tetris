@@ -1,4 +1,8 @@
 {:frodo/config {:web {:port 3000
                       :handler tetris.handler/app}
                 :nrepl {:port 7888
-                        :cljs-repl? true}}}
+                        :cljs-repl? true}}
+
+ :nomad/environments {"prod"
+                      {:frodo/config {:web {:port 3556}
+                                      :nrepl nil}}}}
