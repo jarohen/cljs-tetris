@@ -1,5 +1,5 @@
 (ns tetris.handler
-  (:require [ring.util.response :refer [response]]
+  (:require [ring.util.response :refer [response content-type]]
             [compojure.core :refer [defroutes GET]]
             [compojure.route :refer [resources]]
             [compojure.handler :refer [api]]
@@ -22,7 +22,8 @@
      [:script (repl-connect-js)]]]))
 
 (defroutes app-routes
-  (GET "/" [] (response (page-frame)))
+  (GET "/" [] (-> (response (page-frame))
+                  (content-type "text/html")))
   (GET "/scores" [] multiplayer/user-joined!)
   (resources "/js" {:root "js"}))
 
