@@ -1,6 +1,6 @@
 (ns tetris.handler
   (:require [ring.util.response :refer [response content-type]]
-            [compojure.core :refer [defroutes GET]]
+            [compojure.core :refer [routes GET]]
             [compojure.route :refer [resources]]
             [compojure.handler :refer [api]]
             [hiccup.page :refer [html5 include-css include-js]]
@@ -21,12 +21,14 @@
      [:div#content]
      [:script (repl-connect-js)]]]))
 
-(defroutes app-routes
-  (GET "/" [] (-> (response (page-frame))
-                  (content-type "text/html")))
-  (GET "/scores" [] multiplayer/user-joined!)
-  (resources "/js" {:root "js"}))
+(defn app-routes []
+  (routes
+    (GET "/" [] (-> (response (page-frame))
+                    (content-type "text/html")))
+    (let [!users (multiplayer/init-conns)]
+      (GET "/scores" {:as req} (multiplayer/user-joined! req !users)))
+    (resources "/js" {:root "js"})))
 
-(def app 
-  (-> app-routes
+(defn app []
+  (-> (app-routes)
       api))

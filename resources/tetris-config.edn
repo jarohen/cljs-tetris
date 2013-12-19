@@ -1,5 +1,5 @@
 {:frodo/config {:web {:port 3000
-                      :handler tetris.handler/app}
+                      :handler-fn tetris.handler/app}
                 :nrepl {:port 7888
                         :cljs-repl? true}}
 
